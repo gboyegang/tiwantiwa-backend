@@ -1,6 +1,5 @@
 // src/index.js
 import "dotenv/config";
-
 import express from "express";
 import { initDB } from "./services/db.service.js";
 import { handleTelegramWebhook } from "./bot.js";
@@ -25,16 +24,16 @@ app.get("/health/db", async (req, res) => {
 
 app.post("/telegram-webhook", handleTelegramWebhook);
 
-(async function start() {
-  if (!process.env.DATABASE_URL) {
-    console.error("DATABASE_URL missing");
-    process.exit(1);
-  }
+// 🚨 START SERVER FIRST (Railway requirement)
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
 
-  await initDB();
-  console.log("Database ready");
-
-  app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-  });
-})();
+// 🔁 DB connects in background (never crashes app)
+if (process.env.DATABASE_URL) {
+  initDB()
+    .then(() => console.log("Database connected"))
+    .catch(err => console.error("Database error:", err.message));
+} else {
+  console.warn("DATABASE_URL not set — running without DB");
+}
